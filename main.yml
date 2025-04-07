@@ -1,0 +1,55 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build the application
+        run: npm run build
+
+  dockerize:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.phanindra4568 }}
+          password: ${{ secrets.12345678phani }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.phanindra4568 }}/nodejs-sample:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: dockerize
+
+    steps:
+      - name: Deploy application
+        run: |
+          ssh user@your-server "docker pull ${{ secrets.phanindra4568 }}/nodejs-sample:latest && docker run -d -p 3000:3000 ${{ secrets.phanindra4568 }}/nodejs-sample:latest"
